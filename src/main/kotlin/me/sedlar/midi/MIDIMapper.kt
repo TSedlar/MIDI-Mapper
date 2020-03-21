@@ -3,26 +3,27 @@ package me.sedlar.midi
 import javafx.application.Application
 import javafx.application.Platform.runLater
 import javafx.fxml.FXMLLoader
+import javafx.scene.Node
 import javafx.scene.Parent
 import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.image.Image
-import javafx.scene.input.KeyCode
-import javafx.stage.FileChooser
 import javafx.stage.Modality
 import javafx.stage.Stage
 import javafx.stage.StageStyle
 import me.sedlar.midi.binding.MIDIBinding
-import java.io.File
 import javax.sound.midi.MidiDevice
 import javax.sound.midi.MidiMessage
 import javax.sound.midi.MidiSystem
 import javax.sound.midi.Receiver
 import kotlin.system.exitProcess
 import javafx.scene.layout.VBox
+import me.sedlar.midi.binding.ACTIONS
+import me.sedlar.midi.binding.MIDIAction
+import me.sedlar.midi.binding.actions.KeyRepeatAction
+import me.sedlar.util.JFX
 import java.awt.Desktop
-
 
 private fun findDevices(): List<MidiDevice> {
     val list = ArrayList<MidiDevice>()
@@ -281,105 +282,58 @@ class MidiMapper : Application() {
         defaultData: String? = null,
         callback: (binding: MIDIBinding?) -> Unit
     ) {
-        val parent = FXMLLoader.load<Parent>(javaClass.getResource("/design-binding.fxml"))
+        val design = JFX.loadFXML("/design-binding.fxml")
+        val buttons = JFX.loadFXML("/design-binding-buttons.fxml")
 
         val stage = Stage()
         stage.initModality(Modality.APPLICATION_MODAL)
         stage.initStyle(StageStyle.UNDECORATED)
         stage.title = "Binding"
 
-        val scene = Scene(parent)
-        stage.scene = scene
+        val vbox = VBox()
+        vbox.spacing = 10.0
+        vbox.children.add(design)
+        vbox.children.add(buttons)
 
-        val grpKey = scene.lookup("#grp-key")
-        val grpMultikey = scene.lookup("#grp-multikey")
-        val grpProgram = scene.lookup("#grp-program")
-        val grpAction = scene.lookup("#grp-action")
-        val grpCommand = scene.lookup("#grp-command")
+        val scene = Scene(vbox)
+        stage.scene = scene
 
         val lblMidi = scene.lookup("#lbl-midi") as Label
         val cmbType = scene.lookup("#cmb-type") as ChoiceBox<String>
         val cmbOutput = scene.lookup("#cmb-output") as ChoiceBox<String>
-        val txtKey = scene.lookup("#txt-key") as TextField
-        val txtMultikey = scene.lookup("#txt-multikey") as TextField
-        val btnProgram = scene.lookup("#btn-program") as Button
-        val cmbActions = scene.lookup("#cmb-actions") as ChoiceBox<String>
-        val txtCommand = scene.lookup("#txt-command") as TextField
 
         val btnConfirm = scene.lookup("#btn-binding-confirm") as Button
         val btnCancel = scene.lookup("#btn-binding-cancel") as Button
 
-        var data: String? = null
-        var args: String? = null
+        var action: MIDIAction? = null
+        var formData: Pair<Node, Runnable>? = null
+
+        val confirmer = Runnable {
+            btnConfirm.isDisable = !(action != null && lblMidi.text.contains("["))
+        }
 
         cmbType.items.addAll("Button", "Knob")
 
         cmbType.selectionModel.selectedItemProperty().addListener { _, _, newValue ->
+            action = null
             cmbOutput.selectionModel.clearSelection()
             cmbOutput.items.clear()
-            cmbOutput.items.addAll(
-                "Key", "Repeat key", "Multikey", "Program", "Action", "Command"
-            )
-            if (newValue == "Button") {
-                cmbActions.items.addAll("Left click", "Right click")
-            } else {
-                cmbActions.items.addAll(
-                    "Left click",
-                    "Right click",
-                    "Mouse X",
-                    "Mouse Y",
-                    "Mouse offset X",
-                    "Mouse offset Y"
-                )
+            ACTIONS.filter { it.runTypes.contains(newValue) }.forEach { action ->
+                cmbOutput.items.add(action.name)
             }
+            confirmer.run()
         }
-
-        val resetter = Runnable {
-            data = null
-            args = null
-            grpKey.isManaged = false
-            grpKey.isVisible = false
-            grpMultikey.isManaged = false
-            grpMultikey.isVisible = false
-            grpProgram.isManaged = false
-            grpProgram.isVisible = false
-            grpAction.isManaged = false
-            grpAction.isVisible = false
-            grpCommand.isManaged = false
-            grpCommand.isVisible = false
-        }
-
-        val enabler = Runnable {
-            btnConfirm.isDisable = !(data != null && data!!.isNotEmpty() && lblMidi.text.contains("["))
-        }
-
-        resetter.run()
 
         cmbOutput.selectionModel?.selectedItemProperty()?.addListener { _, _, newValue ->
-            resetter.run()
-            when (newValue) {
-                "Repeat key",
-                "Key" -> {
-                    grpKey.isManaged = true
-                    grpKey.isVisible = true
-                }
-                "Multikey" -> {
-                    grpMultikey.isManaged = true
-                    grpMultikey.isVisible = true
-                }
-                "Program" -> {
-                    grpProgram.isManaged = true
-                    grpProgram.isVisible = true
-                }
-                "Action" -> {
-                    grpAction.isManaged = true
-                    grpAction.isVisible = true
-                }
-                "Command" -> {
-                    grpCommand.isManaged = true
-                    grpCommand.isVisible = true
-                }
+            vbox.children.clear()
+            action = null
+            vbox.children.add(design)
+            ACTIONS.find { it.name == newValue }?.let { selectedAction ->
+                action = selectedAction.copy()
+                formData = action!!.build(confirmer)
+                vbox.children.add(formData!!.first)
             }
+            vbox.children.add(buttons)
             stage.sizeToScene()
         }
 
@@ -398,95 +352,35 @@ class MidiMapper : Application() {
                     val msgData = message.message[2]
                     runLater {
                         lblMidi.text = "$btn [$msgData]"
+                        confirmer.run()
                     }
                 }
             }
             device.open()
         }
 
-        // Handle enabling when changing midi input
-        lblMidi.textProperty().addListener { _, _, _ ->
-            enabler.run()
-        }
-
-        val keyCombo = ArrayList<String>()
-        var firstKey: KeyCode? = null
-
-        // Handle "Key" output
-        txtKey.setOnKeyPressed { evt ->
-            if (firstKey == null) {
-                firstKey = evt.code
-            }
-            val txt = evt.text.trim()
-            val visual = if (txt.isEmpty()) evt.code.getName() else txt
-            if (!keyCombo.contains(visual)) {
-                keyCombo.add(visual)
-            }
-            evt.consume()
-            enabler.run()
-        }
-
-        txtKey.setOnKeyReleased { evt ->
-            if (evt.code == firstKey) {
-                val txt = keyCombo.joinToString(separator = " + ")
-                data = txt
-                txtKey.text = txt
-                keyCombo.clear()
-                firstKey = null
-            }
-            enabler.run()
-        }
-
-        // Handle "Multikey" output
-        txtMultikey.setOnKeyReleased {
-            data = txtMultikey.text
-            enabler.run()
-        }
-
-        // Handle "Program" output
-        btnProgram.setOnAction {
-            // file chooser..
-            val fileChooser = FileChooser()
-            fileChooser.showOpenDialog(rootStage)?.let { file ->
-                data = file.absolutePath
-                btnProgram.text = file.name
-            }
-            enabler.run()
-        }
-
-        // Handle "Action" output
-        cmbActions.selectionModel.selectedItemProperty().addListener { _, _, newValue ->
-            data = newValue
-            enabler.run()
-        }
-
-        // Handle "Command" output
-        txtCommand.setOnKeyReleased {
-            data = txtCommand.text
-            enabler.run()
-        }
-
         btnConfirm.setOnAction {
-            val midiData = lblMidi.text.split(" [")
-            val btn = midiData[0].toByte()
-            val trigger = if (midiData[1] != "0]") {
-                midiData[1].substring(0, midiData[1].length - 1)
-            } else {
-                "!0"
-            }
-            val type = cmbType.selectionModel.selectedItem.toLowerCase()
-            val output = cmbOutput.selectionModel.selectedItem
+            if (action?.formData != null) {
+                val midiData = lblMidi.text.split(" [")
+                val btn = midiData[0].toByte()
+                val trigger = if (midiData[1] != "0]") {
+                    midiData[1].substring(0, midiData[1].length - 1)
+                } else {
+                    "!0"
+                }
+                val type = cmbType.selectionModel.selectedItem
+                val output = cmbOutput.selectionModel.selectedItem
 
-            callback(
-                MIDIBinding(
-                    btn = btn,
-                    trigger = if (data!!.contains("Mouse")) "!0" else trigger,
-                    type = type,
-                    output = output,
-                    data = data!!,
-                    args = args
+                callback(
+                    MIDIBinding(
+                        btn = btn,
+                        trigger = if (action!!.formData!!.contains("Mouse")) "!0" else trigger,
+                        type = type,
+                        output = output,
+                        data = action!!.formData!!
+                    )
                 )
-            )
+            }
 
             stage.close()
         }
@@ -498,42 +392,19 @@ class MidiMapper : Application() {
 
         if (defaultBtn != null) {
             lblMidi.text = defaultBtn
-            enabler.run()
+            confirmer.run()
         }
 
         if (defaultType != null) {
             cmbType.selectionModel.select(defaultType)
-            enabler.run()
+            confirmer.run()
         }
 
-        if (defaultOutput != null) {
+        if (defaultOutput != null && defaultData != null) {
             cmbOutput.selectionModel.select(defaultOutput)
-            when (defaultOutput) {
-                "Repeat key",
-                "Key" -> {
-                    txtKey.text = defaultData
-                }
-                "Multikey" -> {
-                    txtMultikey.text = defaultData
-                }
-                "Program" -> {
-                    val file = File(defaultData!!)
-                    data = file.absolutePath
-                    btnProgram.text = file.name
-                }
-                "Action" -> {
-                    cmbActions.selectionModel.select(defaultData)
-                }
-                "Command" -> {
-                    txtCommand.text = defaultData
-                }
-            }
-            enabler.run()
-        }
-
-        if (defaultData != null) {
-            data = defaultData
-            enabler.run()
+            action?.formData = defaultData
+            formData?.second?.run()
+            confirmer.run()
         }
 
         stage.show()
@@ -553,6 +424,7 @@ class MidiMapper : Application() {
                                 bindings[idx] = newBinding
                                 handleProfileLoad()
                             }
+                            attachWithProfile()
                         }
                     )
                 }
@@ -599,7 +471,8 @@ class MidiMapper : Application() {
 
                         profile.bindings.forEach { binding ->
                             if (binding.btn == btn) {
-                                val isRepeatKey = binding.output == "Repeat key"
+                                val action = binding.action
+                                val isRepeatKey = action != null && action is KeyRepeatAction
                                 if ((isRepeatKey || binding.trigger == "!0" && msgData != 0.toByte()) || binding.trigger == msgData.toString()) {
                                     try {
                                         binding.execute(msgData)

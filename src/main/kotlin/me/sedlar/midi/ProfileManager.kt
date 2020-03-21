@@ -45,7 +45,15 @@ object ProfileManager {
         val dataMap = HashMap<String, Any>()
         dataMap["deviceName"] = profile.deviceName
         dataMap["name"] = profile.name
-        dataMap["bindings"] = profile.bindings
+        dataMap["bindings"] = profile.bindings.map {
+            mapOf(
+                "btn" to it.btn,
+                "trigger" to it.trigger,
+                "type" to it.type,
+                "output" to it.output,
+                "data" to it.data
+            )
+        }
         val json = GsonBuilder().setPrettyPrinting().create().toJson(dataMap)
         Files.write(targetFile.toPath(), json.toByteArray())
     }
@@ -93,8 +101,7 @@ object ProfileManager {
                 trigger = binding["trigger"].toString(),
                 type = binding["type"].toString(),
                 output = binding["output"].toString(),
-                data = binding["data"].toString(),
-                args = if (binding.containsKey("args")) binding["args"].toString() else null
+                data = binding["data"].toString()
             ))
         }
         return profile

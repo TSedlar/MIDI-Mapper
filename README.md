@@ -5,10 +5,17 @@
 
 ### A program used to map MIDI buttons to computer actions
 
-![](wiki/screenshot.png)
-
-### Requirements
+## Requirements
 - Java 8
 
-### Installing
+## Installing
 The latest jar can be downloaded [here](https://github.com/TSedlar/MIDI-Mapper/releases)
+
+## Screenshots
+
+![](wiki/screenshot.png)
+
+### Example devices
+
+![](wiki/launchpad-mini.jpg)
+![](wiki/launchkey-mini.jpg)

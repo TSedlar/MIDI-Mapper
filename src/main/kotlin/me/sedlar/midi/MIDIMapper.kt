@@ -9,21 +9,20 @@ import javafx.scene.Scene
 import javafx.scene.control.*
 import javafx.scene.control.Alert.AlertType
 import javafx.scene.image.Image
+import javafx.scene.layout.VBox
 import javafx.stage.Modality
 import javafx.stage.Stage
-import javafx.stage.StageStyle
+import me.sedlar.midi.binding.ACTIONS
+import me.sedlar.midi.binding.MIDIAction
 import me.sedlar.midi.binding.MIDIBinding
+import me.sedlar.midi.binding.actions.KeyRepeatAction
+import me.sedlar.util.JFX
+import java.awt.Desktop
 import javax.sound.midi.MidiDevice
 import javax.sound.midi.MidiMessage
 import javax.sound.midi.MidiSystem
 import javax.sound.midi.Receiver
 import kotlin.system.exitProcess
-import javafx.scene.layout.VBox
-import me.sedlar.midi.binding.ACTIONS
-import me.sedlar.midi.binding.MIDIAction
-import me.sedlar.midi.binding.actions.KeyRepeatAction
-import me.sedlar.util.JFX
-import java.awt.Desktop
 
 private fun findDevices(): List<MidiDevice> {
     val list = ArrayList<MidiDevice>()
@@ -92,7 +91,7 @@ class MidiMapper : Application() {
         root = Scene(vBox)
         rootStage = stage
 
-        stage.icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")));
+        stage.icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
         stage.scene = root
         stage.title = "MIDI Mapper"
@@ -211,6 +210,7 @@ class MidiMapper : Application() {
         dialog.title = "MIDI Mapper"
         dialog.headerText = "Enter profile name:"
         dialog.contentText = "Name:"
+        (dialog.dialogPane.scene.window as Stage).icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
         val result = dialog.showAndWait()
 
@@ -234,6 +234,7 @@ class MidiMapper : Application() {
             dialog.title = "MIDI Mapper"
             dialog.headerText = "Enter profile name:"
             dialog.contentText = "Name:"
+            (dialog.dialogPane.scene.window as Stage).icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
             val result = dialog.showAndWait()
 
@@ -259,6 +260,7 @@ class MidiMapper : Application() {
                     alert.title = "Delete Profile"
                     alert.headerText = "Are you sure want to delete this profile?"
                     alert.contentText = "Profile: [$profileName] @ [${device.deviceInfo.name}]"
+                    (alert.dialogPane.scene.window as Stage).icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
                     // option != null.
                     val option = alert.showAndWait()
@@ -287,8 +289,8 @@ class MidiMapper : Application() {
 
         val stage = Stage()
         stage.initModality(Modality.APPLICATION_MODAL)
-        stage.initStyle(StageStyle.UNDECORATED)
         stage.title = "Binding"
+        stage.icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
         val vbox = VBox()
         vbox.spacing = 10.0

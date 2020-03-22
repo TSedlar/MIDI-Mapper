@@ -15,6 +15,24 @@ The latest jar can be downloaded [here](https://github.com/TSedlar/MIDI-Mapper/r
 
 ![](wiki/screenshot.png)
 
+## OBS
+
+This can be used with OBS as an alternative to a Stream Deck.
+
+### Supported Operations
+![](wiki/obs-1.png)
+
+### Example Integrations
+![](wiki/obs-2.png)
+
+Arguments should be separated with a comma.
+
+As can be seen in the scene changes, if a transition is wanted, the name of the transition should be included after the name of the scene.
+
+If using a knob to change volume of a source, no argument is needed.
+
+If using a button to change volume, one needs to include it after the source name: `Yeti, 0.5` (change yeti to 50% volume)
+
 ### Example devices
 
 ![](wiki/launchpad-mini.jpg)

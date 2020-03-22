@@ -51,7 +51,8 @@ object ProfileManager {
                 "trigger" to it.trigger,
                 "type" to it.type,
                 "output" to it.output,
-                "data" to it.data
+                "data" to it.data,
+                "args" to it.args
             )
         }
         val json = GsonBuilder().setPrettyPrinting().create().toJson(dataMap)
@@ -101,7 +102,8 @@ object ProfileManager {
                 trigger = binding["trigger"].toString(),
                 type = binding["type"].toString(),
                 output = binding["output"].toString(),
-                data = binding["data"].toString()
+                data = binding["data"].toString(),
+                args = (binding["args"] as ArrayList<Any>).map { it.toString() }.toTypedArray()
             ))
         }
         return profile

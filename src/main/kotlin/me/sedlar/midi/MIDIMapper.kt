@@ -16,6 +16,7 @@ import me.sedlar.midi.binding.ACTIONS
 import me.sedlar.midi.binding.MIDIAction
 import me.sedlar.midi.binding.MIDIBinding
 import me.sedlar.midi.binding.actions.KeyRepeatAction
+import me.sedlar.midi.binding.actions.OBSAction
 import me.sedlar.util.JFX
 import java.awt.Desktop
 import javax.sound.midi.MidiDevice
@@ -195,7 +196,12 @@ class MidiMapper : Application() {
         findSelectedDevice()?.close()
         findSelectedProfile()?.let { profile ->
             profile.bindings.forEach { binding ->
-                lstBindings?.items?.add("${binding.btn} [${binding.trigger}] -> ${binding.output} [${binding.data}]")
+                var label = "${binding.btn} [${binding.trigger}] -> ${binding.output} [${binding.data}"
+                if (binding.args.isNotEmpty()) {
+                    label += " args=\"${binding.args.joinToString(separator = " ")}\""
+                }
+                label += "]"
+                lstBindings?.items?.add(label)
             }
             btnProfileRename?.isDisable = false
             btnProfileDelete?.isDisable = false
@@ -282,6 +288,7 @@ class MidiMapper : Application() {
         defaultType: String? = null,
         defaultOutput: String? = null,
         defaultData: String? = null,
+        defaultArgs: Array<String>? = null,
         callback: (binding: MIDIBinding?) -> Unit
     ) {
         val design = JFX.loadFXML("/design-binding.fxml")
@@ -373,13 +380,22 @@ class MidiMapper : Application() {
                 val type = cmbType.selectionModel.selectedItem
                 val output = cmbOutput.selectionModel.selectedItem
 
+                var forceNonZero = false
+
+                if (action!!.formData!!.contains("Mouse")) {
+                    forceNonZero = true
+                } else if (type == "Knob" && action!!.formData == "Change volume") {
+                    forceNonZero = true
+                }
+
                 callback(
                     MIDIBinding(
                         btn = btn,
-                        trigger = if (action!!.formData!!.contains("Mouse")) "!0" else trigger,
+                        trigger = if (forceNonZero) "!0" else trigger,
                         type = type,
                         output = output,
-                        data = action!!.formData!!
+                        data = action!!.formData!!,
+                        args = action!!.formArgs
                     )
                 )
             }
@@ -402,9 +418,14 @@ class MidiMapper : Application() {
             confirmer.run()
         }
 
-        if (defaultOutput != null && defaultData != null) {
+        if (defaultOutput != null) {
             cmbOutput.selectionModel.select(defaultOutput)
-            action?.formData = defaultData
+            if (defaultData != null) {
+                action?.formData = defaultData
+            }
+            if (defaultArgs != null) {
+                action?.formArgs = defaultArgs
+            }
             formData?.second?.run()
             confirmer.run()
         }
@@ -421,6 +442,7 @@ class MidiMapper : Application() {
                         defaultType = binding.type,
                         defaultOutput = binding.output,
                         defaultData = binding.data,
+                        defaultArgs = if (binding.args.isNotEmpty()) binding.args else null,
                         callback = { newBinding ->
                             if (newBinding != null) {
                                 bindings[idx] = newBinding

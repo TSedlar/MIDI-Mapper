@@ -10,7 +10,7 @@ abstract class DropdownAction(
     runTypes: Array<String> = arrayOf("Button", "Knob")
 ) : MIDIAction(name, runTypes) {
 
-    private var cmbAction: ChoiceBox<String>? = null
+    internal var cmbAction: ChoiceBox<String>? = null
 
     @Suppress("UNCHECKED_CAST")
     override fun build(confirmer: Runnable): Pair<Node, Runnable> {

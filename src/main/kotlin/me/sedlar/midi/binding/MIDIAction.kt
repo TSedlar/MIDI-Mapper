@@ -13,6 +13,7 @@ internal val robot = Robot()
 abstract class MIDIAction(val name: String, val runTypes: Array<String> = arrayOf("Button", "Knob")) : Cloneable {
 
     var formData: String? = null
+    var formArgs: Array<String> = emptyArray()
 
     abstract fun build(confirmer: Runnable): Pair<Node, Runnable>
 

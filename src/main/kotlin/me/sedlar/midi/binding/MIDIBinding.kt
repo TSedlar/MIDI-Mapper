@@ -10,7 +10,8 @@ internal val ACTIONS = arrayOf(
     ProgramAction(),
     CommandAction(),
     ButtonAction(),
-    KnobAction()
+    KnobAction(),
+    OBSAction()
 )
 
 open class MIDIBinding(
@@ -18,7 +19,8 @@ open class MIDIBinding(
     val trigger: String = "!0",
     val type: String = "button",
     val output: String,
-    val data: String
+    val data: String,
+    val args: Array<String> = emptyArray()
 ) {
 
     val action: MIDIAction? = ACTIONS.find { it.name == output }?.copy()

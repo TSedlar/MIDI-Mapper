@@ -7,6 +7,7 @@ import me.sedlar.midi.binding.MIDIBinding
 import me.sedlar.midi.binding.robot
 import java.awt.GraphicsEnvironment
 import java.awt.Point
+import java.awt.event.InputEvent
 
 private val size = GraphicsEnvironment.getLocalGraphicsEnvironment().maximumWindowBounds
 private val center = Point(size.width / 2, size.height / 2)
@@ -18,7 +19,7 @@ private var offY = 0
 
 open class BasicActionHandler(
     name: String,
-    actions: Array<String>,
+    actions: Array<Pair<String, Boolean>>,
     runTypes: Array<String> = arrayOf("Button", "Knob")
 ) : DropdownAction(name, actions, runTypes) {
 
@@ -29,6 +30,28 @@ open class BasicActionHandler(
             }
             "Right click" -> {
                 robot.mouseClick(false)
+            }
+            "Middle click" -> {
+                doAndWaitForRelease(
+                    btnData,
+                    startTask = {
+                        robot.mousePress(InputEvent.BUTTON2_DOWN_MASK)
+                    },
+                    finishTask = {
+                        robot.mouseRelease(InputEvent.BUTTON2_DOWN_MASK)
+                    }
+                )
+            }
+            "Drag" -> {
+                doAndWaitForRelease(
+                    btnData,
+                    startTask = {
+                        robot.mousePress(InputEvent.BUTTON1_DOWN_MASK)
+                    },
+                    finishTask = {
+                        robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK)
+                    }
+                )
             }
             "Mouse X" -> {
                 x = center.x + when {

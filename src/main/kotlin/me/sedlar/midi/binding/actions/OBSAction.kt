@@ -12,13 +12,13 @@ import net.twasi.obsremotejava.OBSRemoteController
 class OBSAction : DropdownAction(
     "OBS",
     arrayOf(
-        "Change profile",
-        "Change scene",
-        "Show source",
-        "Hide source",
-        "Mute source",
-        "Unmute source",
-        "Change volume"
+        "Change profile" to false,
+        "Change scene" to false,
+        "Show source" to false,
+        "Hide source" to false,
+        "Mute source" to false,
+        "Unmute source" to false,
+        "Change volume" to false
     )
 ) {
 
@@ -31,7 +31,7 @@ class OBSAction : DropdownAction(
 
         val dropdown = JFX.loadFXML("/bindings/action.fxml")
         cmbAction = dropdown.lookup("#cmb-actions") as ChoiceBox<String>
-        cmbAction?.items?.addAll(actions)
+        cmbAction?.items?.addAll(actions.map { it.first })
         cmbAction?.selectionModel?.selectedItemProperty()?.addListener { _, _, newValue ->
             formData = newValue
             confirmer.run()

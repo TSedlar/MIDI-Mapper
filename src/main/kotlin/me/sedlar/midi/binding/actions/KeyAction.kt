@@ -14,11 +14,6 @@ import kotlin.random.Random
 
 open class KeyAction(name: String = "Key"): MIDIAction(name) {
 
-    internal var repeat: Boolean = false
-
-    private var looping = false
-    private var released = false
-
     override fun build(confirmer: Runnable): Pair<Node, Runnable> {
         val node = JFX.loadFXML("/bindings/key.fxml")
         val txtKey = node.lookup("#txt-key") as TextField
@@ -72,25 +67,19 @@ open class KeyAction(name: String = "Key"): MIDIAction(name) {
             }
         }
         if (repeat) {
-            if (btnData != DATA_BTN_IDLE && !looping) {
-                Thread {
-                    looping = true
-                    released = false
-                    while (!released) {
-                        for (key in keyList) {
-                            robot.keyPress(key)
-                        }
-                        Thread.sleep(Random.nextLong(35, 45))
-                    }
+            doWhileHeld(
+                btnData,
+                task = {
                     for (key in keyList) {
+                        robot.keyPress(key)
+                    }
+                },
+                finishTask = {
+                    for (key in keyList.reversed()) {
                         robot.keyRelease(key)
                     }
-                    looping = false
-                }.start()
-            } else if (btnData == DATA_BTN_IDLE) {
-                looping = false
-                released = true
-            }
+                }
+            )
         } else {
             for (key in keyList) {
                 robot.keyPress(key)

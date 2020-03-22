@@ -7,7 +7,7 @@ import me.sedlar.midi.binding.MIDIBinding
 import me.sedlar.util.JFX
 import me.sedlar.util.Keyboard
 
-class MultiKeyAction : MIDIAction("Multikey") {
+open class MultiKeyAction(name: String = "Multikey") : MIDIAction(name) {
 
     override fun build(confirmer: Runnable): Pair<Node, Runnable> {
         val node = JFX.loadFXML("/bindings/multikey.fxml")
@@ -22,6 +22,16 @@ class MultiKeyAction : MIDIAction("Multikey") {
     }
 
     override fun execute(binding: MIDIBinding, btnData: Byte) {
-        Keyboard.type(binding.data)
+        if (repeat) {
+            doWhileHeld(
+                btnData,
+                task = {
+                    Keyboard.type(binding.data)
+                },
+                finishTask = {}
+            )
+        } else {
+            Keyboard.type(binding.data)
+        }
     }
 }

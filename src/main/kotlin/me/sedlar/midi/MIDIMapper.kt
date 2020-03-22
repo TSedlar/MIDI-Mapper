@@ -13,10 +13,10 @@ import javafx.scene.layout.VBox
 import javafx.stage.Modality
 import javafx.stage.Stage
 import me.sedlar.midi.binding.ACTIONS
+import me.sedlar.midi.binding.DropdownAction
 import me.sedlar.midi.binding.MIDIAction
 import me.sedlar.midi.binding.MIDIBinding
 import me.sedlar.midi.binding.actions.KeyRepeatAction
-import me.sedlar.midi.binding.actions.OBSAction
 import me.sedlar.util.JFX
 import java.awt.Desktop
 import javax.sound.midi.MidiDevice
@@ -296,6 +296,7 @@ class MidiMapper : Application() {
 
         val stage = Stage()
         stage.initModality(Modality.APPLICATION_MODAL)
+        stage.isResizable = false
         stage.title = "Binding"
         stage.icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
@@ -496,8 +497,13 @@ class MidiMapper : Application() {
                         profile.bindings.forEach { binding ->
                             if (binding.btn == btn) {
                                 val action = binding.action
-                                val isRepeatKey = action != null && action is KeyRepeatAction
-                                if ((isRepeatKey || binding.trigger == "!0" && msgData != 0.toByte()) || binding.trigger == msgData.toString()) {
+                                var isRepeater = action != null && action.repeat
+                                if (!isRepeater && action != null && action is DropdownAction) {
+                                    action.actions.find { it.first == binding.data }?.let { act ->
+                                        isRepeater = act.second
+                                    }
+                                }
+                                if ((isRepeater || binding.trigger == "!0" && msgData != 0.toByte()) || binding.trigger == msgData.toString()) {
                                     try {
                                         binding.execute(msgData)
                                     } catch (t: Throwable) {

@@ -19,6 +19,8 @@ The latest jar can be downloaded [here](https://github.com/TSedlar/MIDI-Mapper/r
 
 This can be used with OBS as an alternative to a Stream Deck.
 
+It requires [obs-websocket](https://github.com/Palakis/obs-websocket) to be installed.
+
 ### Supported Operations
 ![](wiki/obs-1.png)
 

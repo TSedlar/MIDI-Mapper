@@ -1,11 +1,13 @@
 package me.sedlar.midi
 
 import me.sedlar.midi.display.LaunchkeyMiniDisplay
+import me.sedlar.midi.display.LaunchpadMiniDisplay
 
 object DisplayManager {
 
-    val DISPLAYS = arrayOf<MIDIDisplay>(
-        LaunchkeyMiniDisplay()
+    val DISPLAYS = arrayOf(
+        LaunchkeyMiniDisplay(),
+        LaunchpadMiniDisplay()
     )
 
     fun findDisplay(device: String): MIDIDisplay? {

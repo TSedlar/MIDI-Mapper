@@ -39,6 +39,12 @@ object ProfileManager {
     }
 
     fun saveProfile(profile: DeviceProfile) {
+        if (!PROFILES.containsKey(profile.deviceName)) {
+            PROFILES[profile.deviceName] = ArrayList()
+        }
+        if (!PROFILES[profile.deviceName]!!.contains(profile)) {
+            PROFILES[profile.deviceName]!!.add(profile)
+        }
         val targetFile = profile.location
         targetFile.parentFile.mkdirs()
         targetFile.createNewFile()

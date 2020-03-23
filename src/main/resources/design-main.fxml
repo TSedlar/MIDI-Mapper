@@ -30,6 +30,16 @@
                   <Insets />
                </VBox.margin>
             </HBox>
+            <HBox alignment="CENTER" prefHeight="20.0" prefWidth="226.0" spacing="5.0">
+               <children>
+                  <Button id="btn-profile-duplicate" disable="true" mnemonicParsing="false" prefWidth="75.0" text="Duplicate" />
+                  <Button id="btn-profile-reload" disable="true" mnemonicParsing="false" prefWidth="65.0" text="Reload" />
+                  <Button id="btn-profile-show" disable="true" mnemonicParsing="false" prefWidth="65.0" text="Show" />
+               </children>
+               <VBox.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </VBox.margin>
+            </HBox>
          </children>
       </VBox>
       <VBox prefHeight="541.0" prefWidth="381.0">

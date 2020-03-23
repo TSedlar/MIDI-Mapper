@@ -16,7 +16,6 @@ import me.sedlar.midi.binding.ACTIONS
 import me.sedlar.midi.binding.DropdownAction
 import me.sedlar.midi.binding.MIDIAction
 import me.sedlar.midi.binding.MIDIBinding
-import me.sedlar.midi.binding.actions.KeyRepeatAction
 import me.sedlar.util.JFX
 import java.awt.Desktop
 import javax.sound.midi.MidiDevice
@@ -53,6 +52,12 @@ class MidiMapper : Application() {
         get() = root?.lookup("#btn-profile-rename") as Button
     private val btnProfileDelete: Button?
         get() = root?.lookup("#btn-profile-delete") as Button
+    private val btnProfileDuplicate: Button?
+        get() = root?.lookup("#btn-profile-duplicate") as Button
+    private val btnProfileReload: Button?
+        get() = root?.lookup("#btn-profile-reload") as Button
+    private val btnProfileShow: Button?
+        get() = root?.lookup("#btn-profile-show") as Button
     private val lstBindings: ListView<String>?
         get() = root?.lookup("#lst-bindings") as ListView<String>
     private val btnBindingAdd: Button?
@@ -147,6 +152,18 @@ class MidiMapper : Application() {
             handleProfileDelete()
         }
 
+        btnProfileDuplicate?.setOnAction {
+            handleProfileDuplicate()
+        }
+
+        btnProfileReload?.setOnAction {
+            handleProfileReload()
+        }
+
+        btnProfileShow?.setOnAction {
+            handleProfileShow()
+        }
+
         btnBindingAdd?.setOnAction {
             handleBindingCreate { binding ->
                 if (binding != null) {
@@ -190,6 +207,9 @@ class MidiMapper : Application() {
         lstBindings?.items?.clear()
         btnProfileRename?.isDisable = true
         btnProfileDelete?.isDisable = true
+        btnProfileDuplicate?.isDisable = true
+        btnProfileReload?.isDisable = true
+        btnProfileShow?.isDisable = true
         btnBindingAdd?.isDisable = true
         btnBindingEdit?.isDisable = true
         btnBindingDelete?.isDisable = true
@@ -206,6 +226,9 @@ class MidiMapper : Application() {
             btnProfileRename?.isDisable = false
             btnProfileDelete?.isDisable = false
             btnBindingAdd?.isDisable = false
+            btnProfileDuplicate?.isDisable = false
+            btnProfileReload?.isDisable = false
+            btnProfileShow?.isDisable = !canShowProfile()
         }
         attachWithProfile()
     }
@@ -268,7 +291,6 @@ class MidiMapper : Application() {
                     alert.contentText = "Profile: [$profileName] @ [${device.deviceInfo.name}]"
                     (alert.dialogPane.scene.window as Stage).icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
 
-                    // option != null.
                     val option = alert.showAndWait()
 
                     if (option.get() == ButtonType.OK) {
@@ -280,6 +302,48 @@ class MidiMapper : Application() {
                         btnProfileDelete?.isDisable = true
                     }
                 }
+        }
+    }
+
+    private fun handleProfileDuplicate() {
+        findSelectedProfile()?.let { profile ->
+            val dialog = TextInputDialog("")
+
+            dialog.title = "MIDI Mapper"
+            dialog.headerText = "Enter profile name:"
+            dialog.contentText = "Name:"
+            (dialog.dialogPane.scene.window as Stage).icons.add(Image(javaClass.getResourceAsStream("/midi-icon.png")))
+
+            val result = dialog.showAndWait()
+
+            result.ifPresent { profileName ->
+                val duplicateProfile = DeviceProfile(profile.deviceName, profileName)
+                duplicateProfile.bindings.addAll(profile.bindings)
+
+                ProfileManager.saveProfile(duplicateProfile)
+
+                lstProfiles?.items?.add(profileName)
+                lstProfiles?.selectionModel?.select(profileName)
+            }
+        }
+    }
+
+    private fun handleProfileReload() {
+        handleProfileLoad()
+    }
+
+    private fun canShowProfile(): Boolean {
+        val device = findSelectedDevice()
+        return device != null && DisplayManager.hasDisplayForDevice(device.deviceInfo.name)
+    }
+
+    private fun handleProfileShow() {
+        findSelectedDevice()?.let { device ->
+            findSelectedProfile()?.let { profile ->
+                DisplayManager.findDisplay(device.deviceInfo.name)?.let { display ->
+                    display.showDialog(profile)
+                }
+            }
         }
     }
 

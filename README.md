@@ -19,6 +19,8 @@ The latest jar can be downloaded [here](https://github.com/TSedlar/MIDI-Mapper/r
 
 This can be used with OBS as an alternative to a Stream Deck.
 
+It requires [obs-websocket](https://github.com/Palakis/obs-websocket) to be installed.
+
 ### Supported Operations
 ![](wiki/obs-1.png)
 
@@ -37,3 +39,9 @@ If using a button to change volume, one needs to include it after the source nam
 
 ![](wiki/launchpad-mini.jpg)
 ![](wiki/launchkey-mini.jpg)
+
+### Showing profiles
+
+Profiles can be shown on known devices, if you'd like your device implemented for visible profiles, like below, please make an issue and include an infographic of the button mapping on your device.
+
+![](wiki/profile-display.png)

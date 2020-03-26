@@ -39,6 +39,16 @@ private fun findDevices(): List<MidiDevice> {
 @Suppress("UNCHECKED_CAST")
 class MidiMapper : Application() {
 
+    companion object {
+        private var instance: MidiMapper? = null
+        val INSTANCE: MidiMapper
+            get() = instance!!
+    }
+
+    init {
+        instance = this
+    }
+
     private val devices = ArrayList<MidiDevice>()
     private var root: Scene? = null
     private var rootStage: Stage? = null
@@ -342,6 +352,18 @@ class MidiMapper : Application() {
             findSelectedProfile()?.let { profile ->
                 DisplayManager.findDisplay(device.deviceInfo.name)?.let { display ->
                     display.showDialog(profile)
+                }
+            }
+        }
+    }
+
+    fun changeProfile(name: String) {
+        runLater {
+            findSelectedDevice()?.let { device ->
+                if (device.deviceInfo.name in ProfileManager.PROFILES) {
+                    ProfileManager.PROFILES[device.deviceInfo.name]?.find { it.name == name }?.let { profile ->
+                        lstProfiles?.selectionModel?.select(profile.name)
+                    }
                 }
             }
         }

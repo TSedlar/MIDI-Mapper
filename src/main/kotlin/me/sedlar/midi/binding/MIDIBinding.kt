@@ -7,6 +7,7 @@ internal val ACTIONS = arrayOf(
     KeyRepeatAction(),
     MultiKeyAction(),
     MultiKeyRepeatAction(),
+    ProfileAction(),
     SoundAction(),
     ProgramAction(),
     CommandAction(),

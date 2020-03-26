@@ -2,7 +2,6 @@ package me.sedlar.midi.binding
 
 import javafx.scene.Node
 import java.awt.Robot
-import java.awt.event.InputEvent
 import kotlin.random.Random
 
 internal const val DATA_BTN_IDLE = 0.toByte()
